@@ -61,7 +61,7 @@ local function tree_select_sensors(t, name, ...)
   end
 
   for _, node in ipairs(t) do
-    if node.name == name then
+    if node.name == name or node.identifier == name then
       if node.child then
         return tree_select_sensors(node.child, ...)
       end

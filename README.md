@@ -20,8 +20,8 @@ local tree = monitor:buildTree()
 
 -- select specific sensors/hardware by names
 local rs = monitor:select{
-  {'Intel Core i5-4460', 'Temperature'};
-  {'Intel Core i5-4460', 'Voltage'};
+  {'/intelcpu/0', 'Temperature'};
+  {'/intelcpu/0', 'Voltage'};
 }
 
 local Temperatures = rs[1]
