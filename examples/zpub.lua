@@ -20,5 +20,6 @@ while true do
   local result = mon:select(filters)
   local msg    = json.encode(result)
   pub:send(msg)
+  print(msg)
   ztimer.sleep(5000)
 end

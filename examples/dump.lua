@@ -13,14 +13,13 @@ local function print_tree(t, indent)
   for _, node in ipairs(t) do
     printf("%s%s - %s (%s)", indent, node.type, node.name, node.identifier)
     if node.child then
-      if node.child[1] then
-        print_tree(node.child, '  ')
-      else
-        for name, sensors in pairs(node.child) do
-          printf("%s  %s", indent, name)
-          for _, sensor in ipairs(sensors) do
-            printf("%s    %s (%s) = %0.2f", indent, sensor.name, sensor.identifier, sensor.value)
-          end
+      print_tree(node.child, '  ')
+    end
+    if node.sensors then
+      for sensor_type, sensors in pairs(node.sensors) do
+        printf("%s  %s", indent, sensor_type)
+        for _, sensor in ipairs(sensors) do
+          printf("%s    %s (%s) = %0.2f", indent, sensor.name, sensor.identifier, sensor.value)
         end
       end
     end

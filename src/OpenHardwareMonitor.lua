@@ -18,14 +18,14 @@ local unpack = unpack or table.unpack
 
 local function append(t, v) t[#t+1] = v return t end
 
-local function is_sensors_array(t)
-  return not t[1]
-end
-
 local function find_tree(t, fn)
   for _, node in ipairs(t) do
     if node.child then
       local item = find_tree(node.child, fn)
+      if item then return item end
+    end
+    if node.sensors then
+      local item = find_tree(node.sensors, fn)
       if item then return item end
     end
     if fn(node) then return node end
@@ -46,14 +46,13 @@ end
 local function order_by_index(t)
   table.sort(t, by_hardware_type_and_identifier)
   for _, node in ipairs(t) do
-    if node.child then
-      if is_sensors_array(node.child) then
-        for stype, sensors in pairs(node.child) do
-          table.sort(sensors, by_sensor_index)
-        end
-      else
-        order_by_index(node.child)
+    if node.sensors then
+      for _, sensors in pairs(node.sensors) do
+        table.sort(sensors, by_sensor_index)
       end
+    end
+    if node.child then
+      order_by_index(node.child)
     end
   end
   return t
@@ -62,21 +61,30 @@ end
 local function tree_select_sensors(t, name, ...)
   if not name then return t end
 
-  if is_sensors_array(t) then
+  if not t[1] then
     local sensors = t[name]
     if sensors then 
       return tree_select_sensors(sensors, ...)
     end
-    return
-  end
-
-  for _, node in ipairs(t) do
-    if node.name == name or node.identifier == name then
-      if node.child then
-        return tree_select_sensors(node.child, ...)
+  else
+    for _, node in ipairs(t) do
+      if node.name == name or node.identifier == name then
+        if node.child then
+          local item = tree_select_sensors(node.child, ...)
+          if item then return item end
+        end
+        if node.sensors then
+          local item = tree_select_sensors(node.sensors, ...)
+          if item then return item end
+        end
+        if ... then
+          if select('#', ...) == 1 then return node[...] end
+          return nil
+        end
+        return node
+      elseif not ... then
+        return node[name]
       end
-      if ... then return nil end
-      return node
     end
   end
 end
@@ -182,11 +190,11 @@ function OpenHardwareMonitor:buildTree()
       return node.identifier == s.parent
     end)
     if node then
-      if not node.child then node.child = {} end
+      if not node.sensors then node.sensors = {} end
       table.remove(sensors, i)
       local stype = s.type
-      if not node.child[stype] then node.child[stype] = {} end
-      append(node.child[stype], s)
+      if not node.sensors[stype] then node.sensors[stype] = {} end
+      append(node.sensors[stype], s)
     end
   end
 
