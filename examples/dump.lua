@@ -26,7 +26,7 @@ local function print_tree(t, indent)
   for _, node in ipairs(t) do
     printf("%s%s - %s (%s)", indent, node.type, node.name, node.identifier)
     if node.child then
-      print_tree(node.child, '  ')
+      print_tree(node.child, indent..'  ')
     end
     if node.sensors then
       for sensor_type, sensors in pairs(node.sensors) do
