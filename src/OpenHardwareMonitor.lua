@@ -32,14 +32,24 @@ local function find_tree(t, fn)
   end
 end
 
+local function by_sensor_index(lhs, rhs)
+  return lhs.index < rhs.index
+end
+
+local function by_hardware_type_and_identifier(lhs, rhs)
+  if lhs.type == rhs.type then
+    return lhs.identifier < rhs.identifier
+  end
+  return lhs.type < rhs.type
+end
+
 local function order_by_index(t)
+  table.sort(t, by_hardware_type_and_identifier)
   for _, node in ipairs(t) do
     if node.child then
       if is_sensors_array(node.child) then
         for stype, sensors in pairs(node.child) do
-          table.sort(sensors, function(lhs, rhs)
-            return lhs.index < rhs.index
-          end)
+          table.sort(sensors, by_sensor_index)
         end
       else
         order_by_index(node.child)
@@ -141,6 +151,9 @@ end
 function OpenHardwareMonitor:buildTree()
   local hardware, sensors = self:fetchAll()
   local tree = {}
+
+  -- use this for just in case to eliminate infinity loop
+  -- in case of some unpredictiable results
   for _ = 1, #hardware do
     for i = #hardware, 1, -1 do
       local h = hardware[i]
@@ -158,23 +171,26 @@ function OpenHardwareMonitor:buildTree()
         end
       end
     end
+    if #hardware == 0 then break end
   end
 
-  for _ = 1, #sensors do
-    for i = #sensors, 1, -1 do
-      local s = sensors[i]
-      local node = find_tree(tree, function(node)
-        return node.identifier == s.parent
-      end)
-      if node then
-        if not node.child then node.child = {} end
-        table.remove(sensors, i)
-        local stype = s.type
-        if not node.child[stype] then node.child[stype] = {} end
-        append(node.child[stype], s)
-      end
+  assert(#hardware == 0)
+
+  for i = #sensors, 1, -1 do
+    local s = sensors[i]
+    local node = find_tree(tree, function(node)
+      return node.identifier == s.parent
+    end)
+    if node then
+      if not node.child then node.child = {} end
+      table.remove(sensors, i)
+      local stype = s.type
+      if not node.child[stype] then node.child[stype] = {} end
+      append(node.child[stype], s)
     end
   end
+
+  assert(#sensors == 0)
 
   return order_by_index(tree)
 end
