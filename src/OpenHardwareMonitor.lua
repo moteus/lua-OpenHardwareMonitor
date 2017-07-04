@@ -63,30 +63,25 @@ local function tree_select_sensors(t, name, ...)
 
   if not t[1] then
     local sensors = t[name]
-    if sensors then 
-      return tree_select_sensors(sensors, ...)
-    end
-  else
-    for _, node in ipairs(t) do
-      if node.name == name or node.identifier == name then
-        if node.child then
-          local item = tree_select_sensors(node.child, ...)
-          if item then return item end
-        end
-        if node.sensors then
-          local item = tree_select_sensors(node.sensors, ...)
-          if item then return item end
-        end
-        if ... then
-          if select('#', ...) == 1 then return node[...] end
-          return nil
-        end
-        return node
-      elseif not ... then
-        return node[name]
+    return sensors and tree_select_sensors(sensors, ...)
+  end
+
+  for _, node in ipairs(t) do
+    if node.name == name or node.identifier == name then
+      if not ... then return node end
+      if node.child then
+        local item = tree_select_sensors(node.child, ...)
+        if item then return item end
       end
+      if node.sensors then
+        local item = tree_select_sensors(node.sensors, ...)
+        if item then return item end
+      end
+      if select('#', ...) == 1 then return node[...] end
+      break
     end
   end
+  return nil
 end
 
 local OpenHardwareMonitor = {} do

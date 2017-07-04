@@ -33,7 +33,7 @@ local function print_tree(t, indent)
         printf("%s  %s", indent, sensor_type)
         local unit = sensor_type_units[sensor_type]
         unit = unit and unit[1] or ""
-        if unit ~= '%' then unit = ' ' .. unit end
+        if unit ~= '%' and unit ~= '' then unit = ' ' .. unit end
         for _, sensor in ipairs(sensors) do
           printf("%s    %s (%s) = %0.2f%s", indent, sensor.name, sensor.identifier, sensor.value, unit)
         end
